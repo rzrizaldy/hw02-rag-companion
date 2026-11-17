@@ -1,17 +1,19 @@
 # HW02 RAG companion
 
-An interactive companion for **94-844 Generative AI Lab, HW02 (Retrieval-Augmented Generation)** at Carnegie Mellon, Fall 2026.
+An interactive explainer for **94-844 Generative AI Lab, HW02 (Retrieval-Augmented Generation)** at Carnegie Mellon, Fall 2026.
 
 **Open it:** https://rzrizaldy.github.io/hw02-rag-companion/
 
-What you can do:
+The site teaches the ideas behind the homework without giving away its results. Every demo runs on **Plaid House**, a tiny made-up residence guide (~950 words), so students can see every chunk at once and then repeat the idea on the real handbook in their own notebook.
 
-- **Ask the handbook** in plain English. Your question is embedded in the browser with `all-MiniLM-L6-v2`, the same model as the notebook. Switch between three vector stores (50-word chunks, 4-sentence chunks, question index), change top-k, and view distances as cosine, dot, or squared L2.
-- **Chunking lab:** re-cut the quiet-hours page and see where the answer lands.
-- **Top-k ladder:** watch precision and recall change with k, using your own relevance labels or those from three LLM judges.
-- **Question index, LLM judges, C.II table, cost calculator, report checklist.**
-- **Ask the TA:** an FAQ you can search in your own words.
+- **The big picture:** an animated walk from document to chunks, vectors, store, search and judge.
+- **Meaning as direction:** drag two document arrows and see when cosine, dot product and L2 disagree.
+- **Chunking lab:** re-cut the guide and watch whether an answer stays whole.
+- **Search:** ask anything. Your question is embedded in the browser with `all-MiniLM-L6-v2` (the notebook's model) and drawn as a dartboard with a top-k circle. "Mine" searches the chunks you made in the lab.
+- **Precision and recall:** a pooled relevance map and P/R curves as k grows; you can be the judge.
+- **Question index, LLM judge anatomy, cost formula.**
+- **Your game plan** for working through HW02 on your own, and **Ask the TA**, an FAQ you can search in your own words.
 
-All numbers come from the TA's local run on 17 Nov 2026. Your Colab numbers can differ a little. The handbook text is CMU's public *The Word 2025–2026* student handbook.
+Data is built by `ta_run/export_companion_data.py` from `ta_run/companion_toy_guide.txt` and `ta_run/companion_faq.md`.
 
 Static site, no build step. To run it locally: `python3 -m http.server 8742`, then open http://localhost:8742.

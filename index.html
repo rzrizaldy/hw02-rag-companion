@@ -33,171 +33,161 @@
 
 <section class="slide mA" id="intro" data-part="A" data-label="Start"><div class="inner hero reveal">
   <div>
-    <div class="kicker"><span class="dot">0</span>HW02 companion</div>
-    <h1>Can the handbook find CMU's quiet hours?</h1>
-    <p class="lead">You'll build a search engine over a 370-page handbook, then find out why it sometimes misses an answer that's right there on page 266. Type questions in plain English, move the sliders, and watch the retrieval change.</p>
-    <div class="ctas"><a class="btn primary" href="#ask"><svg class="ic"><use href="#i-search"/></svg>Ask the handbook</a><a class="btn" href="#faq"><svg class="ic"><use href="#i-chat"/></svg>Ask the TA</a></div>
-    <p class="lead" style="font-size:15px;margin-top:14px">All numbers come from the TA's local run on 17 Nov 2026. Your Colab numbers can differ a little.</p>
+    <div class="kicker"><span class="dot">0</span>HW02 companion · learn the ideas</div>
+    <h1>How does a computer find the right paragraph?</h1>
+    <p class="lead">Retrieval is like a librarian who has never read your question before. It cuts a long document into small pieces, turns each piece into a point in “meaning space”, and hands back the pieces closest to your question. This site lets you <b>see</b> each step happen.</p>
+    <div class="howto">
+      <div class="card soft"><span class="badge b">1 · Learn</span><p>Each slide explains one idea in plain words, with a picture you can play with.</p></div>
+      <div class="card soft"><span class="badge o">2 · Try</span><p>Everything runs on <b>Plaid House</b>, a tiny made-up dorm guide (about 950 words), so you can see every piece at once.</p></div>
+      <div class="card soft"><span class="badge g">3 · Do it yourself</span><p>Then repeat the idea on the real handbook in your notebook. Your results, your explanations.</p></div>
+    </div>
+    <div class="ctas"><a class="btn primary" href="#pipeline">Start the tour</a><a class="btn" href="#plan">I want a plan</a><a class="btn" href="#faq"><svg class="ic"><use href="#i-chat"/></svg>Ask the TA</a></div>
   </div>
   <div class="recipe">
-    <span class="scotty-sticker" title="Woof. Go find those quiet hours."><svg aria-hidden="true"><use href="#i-scotty"/></svg></span>
-    <a class="step" href="#chunk"><span class="node g">1</span><span><b>Chunk</b><small>Cut 370 pages into small passages</small></span></a>
-    <a class="step" href="#metric"><span class="node b">2</span><span><b>Embed + index</b><small>Each passage becomes 384 numbers in Chroma</small></span></a>
-    <a class="step" href="#topk"><span class="node o">3</span><span><b>Search with top-k</b><small>Return the k closest passages</small></span></a>
-    <a class="step" href="#judge"><span class="node p">4</span><span><b>Judge</b><small>An LLM scores relevance → precision &amp; recall</small></span></a>
+    <span class="scotty-sticker" title="Woof. Let's learn how search works."><svg aria-hidden="true"><use href="#i-scotty"/></svg></span>
+    <a class="step" href="#metric"><span class="node b">1</span><span><b>Meaning as direction</b><small>Why “close” means “similar”</small></span></a>
+    <a class="step" href="#chunk"><span class="node g">2</span><span><b>Cut into chunks</b><small>Where an answer can break</small></span></a>
+    <a class="step" href="#search"><span class="node o">3</span><span><b>Search with top-k</b><small>Return the k closest pieces</small></span></a>
+    <a class="step" href="#judge"><span class="node p">4</span><span><b>Judge and measure</b><small>Was what came back any good?</small></span></a>
   </div>
-</div><a class="btn next" href="#ask" aria-label="Next slide"><svg class="ic"><use href="#i-down"/></svg></a></section>
+</div><a class="btn next" href="#pipeline" aria-label="Next slide"><svg class="ic"><use href="#i-down"/></svg></a></section>
 
-<section class="slide mA" id="pipeline" data-part="A" data-label="How retrieval works"><div class="inner reveal">
+<section class="slide mA" id="pipeline" data-part="A" data-label="The big picture"><div class="inner reveal">
   <div class="kicker"><span class="dot">A</span>The big picture · press play</div>
-  <h2>How a question finds its answer</h2>
+  <h2>From a long document to an answer</h2>
   <div class="card pipe-card"><div id="pipe"></div>
     <div class="pipe-foot"><div class="pipe-steps" id="pipeSteps"></div><p class="pipe-cap" id="pipeCap" aria-live="polite"></p>
     <div class="pipe-ctl"><button type="button" id="pipePrev" aria-label="Previous step">◀</button><button type="button" class="primary" id="pipePlay">Play</button><button type="button" id="pipeNext" aria-label="Next step">▶</button></div></div>
   </div>
 </div></section>
 
-<section class="slide mA" id="ask" data-part="A" data-label="Ask the handbook"><div class="inner reveal">
-  <div class="kicker"><span class="dot">A</span>Part A · try it yourself</div>
-  <h2>Ask the handbook anything</h2>
-  <div class="askbar"><input id="q" type="text" placeholder="e.g. Can I keep a cat in my dorm?" aria-label="Your question" autocomplete="off"><button class="primary" id="go" type="button"><svg class="ic"><use href="#i-search"/></svg>Search</button></div>
-  <div class="status" id="mstatus" role="status"><span class="pip"></span><span>Loading the same embedding model the notebook uses (all-MiniLM-L6-v2, ~23 MB, once)…</span></div>
-  <div class="ctl-row">
-    <div><label>Preset queries</label><div class="chips" id="presets"></div></div>
+<section class="slide mA" id="metric" data-part="A" data-label="Meaning as direction"><div class="inner reveal">
+  <div class="kicker"><span class="dot">A</span>Embeddings and similarity</div>
+  <h2>Similar meaning, similar direction</h2>
+  <p class="lead">An embedding model turns text into an arrow (384 numbers for MiniLM). Texts that mean similar things point in similar directions. “How close?” can be measured three ways. Drag the sliders and see when they disagree.</p>
+  <div class="card vecplay" id="vecplay"></div>
+  <div class="grid3">
+    <div class="card"><h3>Cosine</h3><p style="font-size:15px">Looks only at the <b>angle</b> between arrows. A short passage and a long one compete fairly.</p></div>
+    <div class="card"><h3>Dot product</h3><p style="font-size:15px">Angle <b>and</b> length. A longer arrow can win even if it points a bit away.</p></div>
+    <div class="card"><h3>Euclidean (L2)</h3><p style="font-size:15px">The straight-line <b>gap</b> between the arrow tips. Length matters here too.</p></div>
   </div>
-  <div class="ctl-row">
-    <div><label>Vector store</label><div class="seg-ctl" id="store"><button aria-pressed="true" data-v="word">Word-50</button><button aria-pressed="false" data-v="sent">Sentence-4</button><button aria-pressed="false" data-v="qidx">Question index</button></div></div>
-    <div><label>top-k</label><div class="seg-ctl g" id="kctl"><button aria-pressed="false" data-v="1">1</button><button aria-pressed="false" data-v="3">3</button><button aria-pressed="true" data-v="5">5</button><button aria-pressed="false" data-v="10">10</button></div></div>
-    <div><label>Show distance as</label><div class="seg-ctl o" id="metric"><button aria-pressed="true" data-v="cos">Cosine</button><button aria-pressed="false" data-v="ip">Dot</button><button aria-pressed="false" data-v="l2">L2²</button></div></div>
+  <div class="quiz card soft" data-quiz data-why="When every arrow has length 1, only the angle is left to compare, so all three metrics rank the same way. Check the length of your own embeddings with np.linalg.norm.">
+    <h3>Quick check: all your arrows have length 1. You switch from cosine to L2. What happens to the ranking?</h3>
+    <div class="opts"><button data-ok="0">It changes a lot</button><button data-ok="1">It stays the same; only the distance numbers change</button><button data-ok="0">Nothing at all changes, not even the numbers</button></div>
+    <div class="feedback" role="status"></div>
   </div>
-  <div class="results" id="results" aria-live="polite"></div>
-  <div class="tip blue" id="asktip"><svg class="ic"><use href="#i-bulb"/></svg><span>Start with <b>“What are CMU’s quiet hours?”</b> on Word-50, k = 5. Is the actual time range in any result? Now try k = 10.</span></div>
-</div></section>
-
-<section class="slide mA" id="space" data-part="A" data-label="See the search"><div class="inner reveal">
-  <div class="kicker"><span class="dot">A</span>Same search, drawn as a dartboard</div>
-  <h2>Your question sits in the middle</h2>
-  <p class="lead">Each dot is a chunk. <b>Closer to the centre = smaller cosine distance.</b> The angle shows <i>where in the handbook</i> it lives (page 1 at the top, going clockwise). The dashed circle is your top-k: everything inside gets returned.</p>
-  <div class="ctl-row">
-    <div><label>Question</label><div class="chips" id="spPresets"></div></div>
-  </div>
-  <div class="ctl-row">
-    <div><label>Vector store</label><div class="seg-ctl" id="spStore"><button aria-pressed="true" data-v="word">Word-50</button><button aria-pressed="false" data-v="sent">Sentence-4</button><button aria-pressed="false" data-v="qidx">Question index</button></div></div>
-    <div style="flex:1;min-width:200px"><label id="spKL">top-k = 5</label><input type="range" id="spK" min="1" max="20" value="5"></div>
-  </div>
-  <div class="space-wrap"><div class="card space-card" id="space-svg"></div><div class="card soft space-side" id="spaceSide"></div></div>
 </div></section>
 
 <section class="slide mA" id="chunk" data-part="A" data-label="Chunking lab"><div class="inner reveal">
-  <div class="kicker"><span class="dot">A</span>Chunking · page 266</div>
+  <div class="kicker"><span class="dot">A</span>Chunking · cut the guide yourself</div>
   <h2>Where does the answer land?</h2>
-  <p class="lead">This is the real text of the quiet-hours page. Change how it's cut. The <b style="color:var(--green)">green outline</b> marks the chunk that holds “8 pm – 8 am”. Retrieval works best when that chunk also says “quiet hours”.</p>
+  <p class="lead">Search returns <b>chunks</b>, never whole documents. Pick a question, then change how the guide is cut. <mark>Highlighted</mark> text is the answer. A <b style="color:var(--green)">green outline</b> means that chunk holds it.</p>
+  <div class="ctl-row"><div><label>Question</label><div class="chips" id="cPresets"></div></div></div>
   <div class="ctl-row">
-    <div><label>Strategy</label><div class="seg-ctl" id="cmode"><button aria-pressed="true" data-v="word">Words</button><button aria-pressed="false" data-v="sent">Sentences</button></div></div>
+    <div><label>Cut by</label><div class="seg-ctl" id="cmode"><button aria-pressed="true" data-v="word">Words</button><button aria-pressed="false" data-v="sent">Sentences</button></div></div>
     <div style="flex:1;min-width:180px"><label id="csizeL">Chunk size: 50 words</label><input type="range" id="csize" min="10" max="150" value="50"></div>
     <div style="flex:1;min-width:180px"><label id="covL">Overlap: 10 words</label><input type="range" id="cov" min="0" max="40" value="10"></div>
   </div>
   <div class="chunkview" id="chunkview"></div>
-  <div class="kpi"><div class="tile b"><span class="big" id="kN">–</span><small>chunks on this page</small></div><div class="tile g"><span class="big" id="kTogether">–</span><small>“Quiet Hours” + the times in one chunk?</small></div><div class="tile o"><span class="big" id="kLen">–</span><small>words in the answer chunk</small></div></div>
+  <div class="kpi"><div class="tile b"><span class="big" id="kN">–</span><small>chunks in the guide</small></div><div class="tile g"><span class="big" id="kWhole">–</span><small>answer kept in one chunk?</small></div><div class="tile o"><span class="big" id="kLen">–</span><small>average words per chunk</small></div></div>
+  <div class="tip blue"><svg class="ic"><use href="#i-bulb"/></svg><span id="ctip"></span></div>
 </div></section>
 
-<section class="slide mA" id="metric" data-part="A" data-label="Similarity metrics"><div class="inner reveal">
-  <div class="kicker"><span class="dot">A</span>Homework A.I · similarity metric</div>
-  <h2>Cosine, dot, or Euclidean?</h2>
-  <div class="grid3">
-    <div class="card"><h3>Cosine distance</h3><pre>1 − (a·b) / (‖a‖‖b‖)</pre><p style="font-size:15px">Compares <b>direction</b> only. Long and short passages compete fairly. 0 = same direction.</p></div>
-    <div class="card"><h3>Dot product (“ip”)</h3><pre>1 − a·b</pre><p style="font-size:15px">Direction <b>and</b> length. Fastest. Longer vectors score higher if they aren't normalized.</p></div>
-    <div class="card"><h3>Euclidean (“l2”)</h3><pre>‖a − b‖²   (Chroma: squared)</pre><p style="font-size:15px">Straight-line gap. Sensitive to vector length. Chroma reports the <b>squared</b> value.</p></div>
-  </div>
-  <div class="card vecplay" id="vecplay"></div>
-  <div class="tip good"><svg class="ic"><use href="#i-bulb"/></svg><span>MiniLM outputs vectors of length 1. For unit vectors, <b>‖a−b‖² = 2 − 2·cos</b> and <b>a·b = cos</b>, so all three give the <b>same ranking</b>. The TA run built all three stores: the top-5 IDs matched for all 5 queries. Only the printed numbers change. Flip “Show distance as” on the previous slide to see it.</span></div>
-  <div class="quiz card soft" data-quiz>
-    <h3>Quick check: your store uses cosine. You switch to l2 and rebuild. What changes?</h3>
-    <div class="opts"><button data-ok="0">The top-5 results change</button><button data-ok="1">Only the distance numbers change</button><button data-ok="0">Nothing, not even the numbers</button></div>
-    <div class="feedback" role="status"></div>
-  </div>
-</div></section>
-
-<section class="slide mB" id="topk" data-part="B" data-label="top-k ladder"><div class="inner reveal">
-  <div class="kicker"><span class="dot">B</span>Part B · “What are CMU’s quiet hours?”</div>
-  <h2>Slide k and watch precision vs. recall</h2>
+<section class="slide mA" id="search" data-part="A" data-label="Search"><div class="inner reveal">
+  <div class="kicker"><span class="dot">A</span>Search · ask Plaid House anything</div>
+  <h2>Your question sits in the middle</h2>
+  <div class="askbar"><input id="q" type="text" placeholder="e.g. Can I have a toaster in my room?" aria-label="Your question" autocomplete="off"><button class="primary" id="go" type="button"><svg class="ic"><use href="#i-search"/></svg>Search</button></div>
+  <div class="status" id="mstatus" role="status"><span class="pip"></span><span>Loading the embedding model your notebook uses (all-MiniLM-L6-v2, ~23 MB, once)…</span></div>
+  <div class="ctl-row"><div><label>Or try</label><div class="chips" id="presets"></div></div></div>
   <div class="ctl-row">
-    <div style="flex:1;min-width:220px"><label id="kL">top-k = 5</label><input type="range" id="kslide" min="0" max="3" step="1" value="2" aria-label="top-k"></div>
-    <div><label>Who decides “relevant”?</label><div class="seg-ctl p" id="labeler"></div></div>
+    <div><label>Chunks</label><div class="seg-ctl" id="store"><button aria-pressed="true" data-v="word">50 words</button><button aria-pressed="false" data-v="sent">4 sentences</button><button aria-pressed="false" data-v="mine">Mine (from the lab)</button></div></div>
+    <div style="flex:1;min-width:200px"><label id="kL">top-k = 3</label><input type="range" id="kslide" min="1" max="10" value="3" aria-label="top-k"></div>
+  </div>
+  <div class="space-wrap"><div class="card space-card" id="space-svg"></div><div class="card soft space-side"><div id="spaceSide"></div></div></div>
+  <div class="tip blue"><svg class="ic"><use href="#i-bulb"/></svg><span id="asktip">Each dot is a chunk. <b>Closer to the centre = more similar.</b> The angle shows where in the guide it lives. Everything inside the dashed circle is returned.</span></div>
+</div></section>
+
+<section class="slide mB" id="topk" data-part="B" data-label="Precision and recall"><div class="inner reveal">
+  <div class="kicker"><span class="dot">B</span>top-k · how many results should you return?</div>
+  <h2>More results: find more, but more noise</h2>
+  <p class="lead"><b>Precision</b> asks “of what came back, how much was useful?” <b>Recall</b> asks “of everything useful, how much came back?” Slide k and watch them pull in opposite directions.</p>
+  <div class="ctl-row"><div><label>Question</label><div class="chips" id="pPresets"></div></div></div>
+  <div class="ctl-row">
+    <div style="flex:1;min-width:200px"><label id="pkL">top-k = 3</label><input type="range" id="pk" min="1" max="10" value="3" aria-label="top-k for precision and recall"></div>
+    <div><label>Who decides “relevant”?</label><div class="seg-ctl p" id="labeler"><button aria-pressed="true" data-v="key">Answer key</button><button aria-pressed="false" data-v="mine">Me (click dots)</button></div></div>
   </div>
   <div class="card poolmap" id="poolmap"></div>
-  <div class="ladder" id="ladder"></div>
-  <div class="tip blue"><svg class="ic"><use href="#i-bulb"/></svg><span><b>Green</b> = scored ≥ 4 (relevant). ★ = holds “8 pm – 8 am”. <i>Grey italic</i> = a repeat of a chunk already returned. Click a rung to read it. In “Mine” mode, a click flips it between relevant and not, and precision/recall update instantly. Recall uses the <b>pool</b>: every relevant chunk any store returned in its top 10.</span></div>
+  <div class="grid2 pr-grid"><div class="card" id="prchart"></div><div class="card soft" id="poolSel"></div></div>
 </div></section>
 
 <section class="slide mB" id="qidx" data-part="B" data-label="Question index"><div class="inner reveal">
-  <div class="kicker"><span class="dot">B</span>Experiment B.III · new index</div>
+  <div class="kicker"><span class="dot">B</span>A different kind of index</div>
   <h2>Search questions, return their chunk</h2>
-  <p class="lead">The third store indexes the <b>1,000 policy questions</b>. Each question carries one attached sentence chunk (its single closest match). Your query finds similar <i>questions</i>. You get back their <i>chunks</i>.</p>
+  <p class="lead">Instead of searching passages, search a list of <b>questions people already asked</b>. Each stored question carries one attached chunk. Your query finds similar questions; you get back their chunks. Watch for arrows that land on the same chunk.</p>
+  <div class="ctl-row"><div><label>Your question</label><div class="chips" id="qPresets"></div></div></div>
   <div class="qflow"><svg class="qlines" id="qlines" aria-hidden="true"></svg><div id="qlist"></div><div class="arrow">→</div><div id="qchunks"></div></div>
-  <div class="tip warn" id="qtip"><svg class="ic"><use href="#i-bulb"/></svg><span></span></div>
+  <div class="tip warn"><svg class="ic"><use href="#i-bulb"/></svg><span id="qtip"></span></div>
 </div></section>
 
-<section class="slide mC" id="judge" data-part="C" data-label="LLM judges"><div class="inner reveal">
-  <div class="kicker"><span class="dot">C</span>Part C · who grades the grader?</div>
-  <h2>Three judges, same prompt</h2>
-  <div class="grid3" id="judges"></div>
-  <div class="typer-head"><h3>Watch them answer the same 1-passage prompt</h3><button type="button" id="typerPlay">Replay</button></div>
+<section class="slide mC" id="judge" data-part="C" data-label="LLM as judge"><div class="inner reveal">
+  <div class="kicker"><span class="dot">C</span>Using an LLM to grade retrieval</div>
+  <h2>Anatomy of a good judge</h2>
+  <div class="grid4 anat">
+    <div class="card"><span class="badge b">1</span><h3>A construct</h3><p>The one quality you rate. “Does this passage help answer the question?”</p></div>
+    <div class="card"><span class="badge o">2</span><h3>Anchors</h3><p>What a 1, 2, 3, 4 and 5 look like, in words. You use the same anchors when you label.</p></div>
+    <div class="card"><span class="badge g">3</span><h3>One passage per call</h3><p>Short prompt, one score back. Fewer chances to mix things up.</p></div>
+    <div class="card"><span class="badge p">4</span><h3>Strict output</h3><p>Ask for exact JSON. Anything else is a <b>failed</b> judgment: count it as missing, never as a 1.</p></div>
+  </div>
+  <div class="typer-head"><h3>Two replies to the same prompt</h3><button type="button" id="typerPlay">Replay</button></div>
   <div class="grid2" id="typer"></div>
-  <div class="tip warn"><svg class="ic"><use href="#i-bulb"/></svg><span>Asked to score <b>one</b> document, Gemma 270M returns scores for five documents it made up, three times in a row. The code then rejects the reply (“Expected 1 document scores, got 5”). That's the “judge failed” you see in Colab. A failed judgment is <b>missing data</b>, not a score of 1.</span></div>
-  <div class="quiz card soft" data-quiz>
-    <h3>The starter's construct is “factuality: whether the information is true”. Why is that weak for judging retrieval?</h3>
-    <div class="opts"><button data-ok="0">Small models can't spell factuality</button><button data-ok="1">Every handbook passage is “true”, so it can't tell a good hit from an off-topic one</button><button data-ok="0">Likert scales don't work with factuality</button></div>
+  <div class="quiz card soft" data-quiz data-why="Every passage in a handbook is ‘true’, so a truth-based score can't separate a useful result from an off-topic one. Rate something that a bad result would fail.">
+    <h3>Someone's judge rates “is this passage factually true?”. Why is that weak for grading search results?</h3>
+    <div class="opts"><button data-ok="0">LLMs can't check facts</button><button data-ok="1">An off-topic passage can be perfectly true, so it still scores high</button><button data-ok="0">1–5 scales only work for opinions</button></div>
     <div class="feedback" role="status"></div>
   </div>
-</div></section>
-
-<section class="slide mC" id="table" data-part="C" data-label="C.II table"><div class="inner reveal">
-  <div class="kicker"><span class="dot">C</span>Homework C.II · the metrics table</div>
-  <h2>What the TA run reported</h2>
-  <div class="ctl-row"><div><label>Judge</label><div class="seg-ctl o" id="tjudge"></div></div></div>
-  <div class="tscroll card" style="padding:8px 12px"><table id="ctable"></table></div>
-  <div class="tip blue"><svg class="ic"><use href="#i-bulb"/></svg><span><b>Precision@k</b> = relevant ÷ unique results in the top k. <b>Recall@k</b> = relevant found ÷ all relevant chunks in the pool. The starter's <code>evaluate_precision_recall</code> has no pool, so with one document per question its “recall” is just 0 or 1. Say so in your report.</span></div>
+  <div class="tip good"><svg class="ic"><use href="#i-bulb"/></svg><span><b>Trust, but check.</b> Label a sample yourself <i>before</i> you look at the judge's scores. Then compare: how often do you agree exactly? Within one point? What's Cohen's kappa? That comparison is your evidence that the judge is usable.</span></div>
 </div></section>
 
 <section class="slide mC" id="cost" data-part="C" data-label="Cost"><div class="inner reveal">
-  <div class="kicker"><span class="dot">C</span>Average cost metric</div>
-  <h2>What would this judge cost on an API?</h2>
+  <div class="kicker"><span class="dot">C</span>What would judging cost?</div>
+  <h2>Tokens × price = cost</h2>
+  <p class="lead">Running a model in your own Colab costs $0 per token. To compare with a hosted API, count tokens and multiply by a published price. <b>These are example numbers.</b> Put in your own token counts and a price page you can cite.</p>
   <div class="grid2">
     <div class="card">
       <div class="grid2" style="gap:12px">
-        <div><label class="kicker" for="cin">Input tokens / call</label><input id="cin" type="number" min="0" value="300"></div>
-        <div><label class="kicker" for="cout">Output tokens / call</label><input id="cout" type="number" min="0" value="100"></div>
-        <div><label class="kicker" for="pin">$ per 1M input</label><input id="pin" type="number" min="0" step="0.01" value="0.04"></div>
-        <div><label class="kicker" for="pout">$ per 1M output</label><input id="pout" type="number" min="0" step="0.01" value="0.08"></div>
-        <div><label class="kicker" for="calls">Judge calls / search (= unique results)</label><input id="calls" type="number" min="1" value="5"></div>
+        <div><label class="kicker" for="cin">Input tokens / call</label><input id="cin" type="number" min="0" value="400"></div>
+        <div><label class="kicker" for="cout">Output tokens / call</label><input id="cout" type="number" min="0" value="80"></div>
+        <div><label class="kicker" for="pin">$ per 1M input</label><input id="pin" type="number" min="0" step="0.01" value="0.10"></div>
+        <div><label class="kicker" for="pout">$ per 1M output</label><input id="pout" type="number" min="0" step="0.01" value="0.30"></div>
+        <div><label class="kicker" for="calls">Judge calls per search</label><input id="calls" type="number" min="1" value="5"></div>
       </div>
     </div>
-    <div class="card soft" style="display:grid;align-content:center;text-align:center">
+    <div class="card soft cost-out">
       <span class="kicker" style="justify-content:center">Cost of one search</span>
-      <span id="costOut" style="font:800 46px "Bricolage Grotesque",sans-serif;color:var(--brand)">$0</span>
+      <span id="costOut">$0</span>
       <span id="costPer" style="color:var(--muted)"></span>
     </div>
   </div>
-  <div class="tip warn"><svg class="ic"><use href="#i-bulb"/></svg><span>Defaults are the TA run's gemma3:4b averages. Prices for small open models <b>disagree across listing sites</b> (we saw $0.04–0.05 in and $0.05–0.10 out per 1M for Gemma 3 4B). Write down <b>which page and date</b> you used. A model running in your own Colab costs $0 per token. Say that, then give the API price-equivalent.</span></div>
+  <div class="tip warn"><svg class="ic"><use href="#i-bulb"/></svg><span>Where do the numbers come from? Your judge reports <b>input and output tokens</b> for each call. “Calls per search” is how many passages you judged for that search. Prices for the same model differ between sites, so write down <b>which page and which date</b>.</span></div>
 </div></section>
 
-<section class="slide mD" id="report" data-part="D" data-label="Report checklist"><div class="inner reveal">
-  <div class="kicker"><span class="dot">D</span>Part D · before you submit</div>
-  <h2>Report checklist</h2>
-  <div class="grid2" id="checklist"></div>
+<section class="slide mD" id="plan" data-part="D" data-label="Your plan"><div class="inner reveal">
+  <div class="kicker"><span class="dot">D</span>Doing HW02 on your own</div>
+  <h2>Your game plan</h2>
+  <p class="lead">Work through one part at a time. Tick things off (saved in this browser). The “ask yourself” questions are what your report should answer, in your own words.</p>
+  <div class="grid2" id="planGrid"></div>
 </div></section>
 
 <section class="slide mD" id="faq" data-part="D" data-label="Ask the TA"><div class="inner reveal">
   <div class="kicker"><span class="dot">D</span>Office hours · ask in your own words</div>
   <h2>Ask the TA</h2>
-  <div class="askbar"><input id="fq" type="text" placeholder="e.g. my judge keeps failing, what do I do?" aria-label="Question for the FAQ" autocomplete="off"></div>
-  <div class="status" id="fstatus"><span class="pip"></span><span>This search is itself a tiny retriever: your question and every FAQ answer are embedded with the same MiniLM model.</span></div>
+  <div class="askbar"><input id="fq" type="text" placeholder="e.g. how do I start? / my judge keeps failing" aria-label="Question for the FAQ" autocomplete="off"></div>
+  <div class="status" id="fstatus"><span class="pip"></span><span>This search is a tiny retriever too: your question and every answer are embedded with the same MiniLM model.</span></div>
+  <div class="chips" id="fcats" style="margin-top:12px"></div>
   <div class="faqlist" id="faqlist" style="margin-top:12px"></div>
 </div></section>
 
 </main>
 <script src="data.js"></script>
 <script src="app.js" defer></script>
-<script src="visuals.js" defer></script>
 </body></html>
