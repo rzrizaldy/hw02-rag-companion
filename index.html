@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
+<title>RAG Lab HW02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css"></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-scotty" viewBox="0 0 64 48"><path fill="currentColor" d="M12.5 21 9 7.5l3.4-1.2 4.3 10.4H43l2.6-12.4 3.6 6.2h2.1l2.9-7.3 2.5 8.6 3.4 4.6 1.4 5.6-4.3 1.6-.4 5.2-5.1 1.6-.8 11.4h-6.4l-.4-7.7H25.4l-1.2 7.7h-6.4l-.6-8.4-3.6-.8.4-4.1z"/><circle cx="53.4" cy="14.6" r="1.5" fill="var(--card,#fff)"/><path d="M44 18.5c3 2.4 9 2.6 12.6.4" fill="none" stroke="#c41230" stroke-width="2.6" stroke-linecap="round"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M4 3.5h6.5A3.5 3.5 0 0 1 12 4.3a3.5 3.5 0 0 1 1.5-.8H20a1 1 0 0 1 1 1v13.7a1 1 0 0 1-1 1h-6a2 2 0 0 0-2 1.8 2 2 0 0 0-2-1.8H4a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M12 5v15" stroke="rgba(255,255,255,.6)" stroke-width="1.4"/></symbol>
+<symbol id="i-flame" viewBox="0 0 24 24"><path d="M12.6 1.8c.8 3.6 5.9 5.9 5.9 12a6.5 6.5 0 0 1-13 0c0-3.1 1.6-5.2 3.3-6.8.1 2 .9 3.3 2.2 3.8-.4-3.2.2-6.3 1.6-9z"/><path d="M12 13.2c.4 1.6 2.6 2.4 2.6 4.6a2.6 2.6 0 0 1-5.2 0c0-1.3.7-2.2 1.4-2.8.1.7.4 1.1.9 1.3-.2-1.1 0-2.2.3-3.1z" fill="#ffc800"/></symbol>
+<symbol id="i-bulb" viewBox="0 0 24 24"><path d="M12 1.8a7.2 7.2 0 0 1 4.2 13V17H7.8v-2.2A7.2 7.2 0 0 1 12 1.8zM8.6 18.6h6.8v1.6a1.8 1.8 0 0 1-1.8 1.8h-3.2a1.8 1.8 0 0 1-1.8-1.8z"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="m15.5 15.5 5.5 5.5" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11"/><path d="m6.5 12.3 3.6 3.6 7.4-7.6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11"/><path d="m8 8 8 8m0-8-8 8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 17.5 4.5 10l2.1-2.1 5.4 5.4 5.4-5.4 2.1 2.1z"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.8l-6.3 3.6 1.5-7.1L1.8 9.4 9 8.6z"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 3.5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-8.5L6 21.5v-4H4a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2z"/></symbol>
+</svg>
+
+<header><div class="top">
+  <a class="wordmark" href="#intro" aria-label="RAG lab HW02, back to start"><span class="scotty-badge"><svg aria-hidden="true"><use href="#i-scotty"/></svg></span><span class="txt">rag lab</span><span class="hw">HW02</span></a>
+  <div class="segs" role="progressbar" aria-label="Parts reviewed" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0">
+    <div class="seg" data-part="A" title="Part A"><span></span></div><div class="seg" data-part="B" title="Part B"><span></span></div><div class="seg" data-part="C" title="Part C"><span></span></div><div class="seg" data-part="D" title="Part D"><span></span></div>
+  </div>
+  <span class="streak" title="Slides visited"><svg class="ic" aria-hidden="true"><use href="#i-flame"/></svg><span id="streak">0</span></span>
+  <span id="counter">1 / 11</span>
+  <button id="theme" type="button" aria-label="Toggle color theme">Theme</button>
+</div></header>
+<nav class="dots" id="dots" aria-label="Slides"></nav>
+
+<main id="deck">
+
+<section class="slide mA" id="intro" data-part="A" data-label="Start"><div class="inner hero reveal">
+  <div>
+    <div class="kicker"><span class="dot">0</span>HW02 companion</div>
+    <h1>Can the handbook find CMU's quiet hours?</h1>
+    <p class="lead">You'll build a search engine over a 370-page handbook, then find out why it sometimes misses an answer that's right there on page 266. Type questions in plain English, move the sliders, and watch the retrieval change.</p>
+    <div class="ctas"><a class="btn primary" href="#ask"><svg class="ic"><use href="#i-search"/></svg>Ask the handbook</a><a class="btn" href="#faq"><svg class="ic"><use href="#i-chat"/></svg>Ask the TA</a></div>
+    <p class="lead" style="font-size:15px;margin-top:14px">All numbers come from the TA's local run on 17 Nov 2026. Your Colab numbers can differ a little.</p>
+  </div>
+  <div class="recipe">
+    <span class="scotty-sticker" title="Woof. Go find those quiet hours."><svg aria-hidden="true"><use href="#i-scotty"/></svg></span>
+    <a class="step" href="#chunk"><span class="node g">1</span><span><b>Chunk</b><small>Cut 370 pages into small passages</small></span></a>
+    <a class="step" href="#metric"><span class="node b">2</span><span><b>Embed + index</b><small>Each passage becomes 384 numbers in Chroma</small></span></a>
+    <a class="step" href="#topk"><span class="node o">3</span><span><b>Search with top-k</b><small>Return the k closest passages</small></span></a>
+    <a class="step" href="#judge"><span class="node p">4</span><span><b>Judge</b><small>An LLM scores relevance → precision &amp; recall</small></span></a>
+  </div>
+</div><a class="btn next" href="#ask" aria-label="Next slide"><svg class="ic"><use href="#i-down"/></svg></a></section>
+
+<section class="slide mA" id="ask" data-part="A" data-label="Ask the handbook"><div class="inner reveal">
+  <div class="kicker"><span class="dot">A</span>Part A · try it yourself</div>
+  <h2>Ask the handbook anything</h2>
+  <div class="askbar"><input id="q" type="text" placeholder="e.g. Can I keep a cat in my dorm?" aria-label="Your question" autocomplete="off"><button class="primary" id="go" type="button"><svg class="ic"><use href="#i-search"/></svg>Search</button></div>
+  <div class="status" id="mstatus" role="status"><span class="pip"></span><span>Loading the same embedding model the notebook uses (all-MiniLM-L6-v2, ~23 MB, once)…</span></div>
+  <div class="ctl-row">
+    <div><label>Preset queries</label><div class="chips" id="presets"></div></div>
+  </div>
+  <div class="ctl-row">
+    <div><label>Vector store</label><div class="seg-ctl" id="store"><button aria-pressed="true" data-v="word">Word-50</button><button aria-pressed="false" data-v="sent">Sentence-4</button><button aria-pressed="false" data-v="qidx">Question index</button></div></div>
+    <div><label>top-k</label><div class="seg-ctl g" id="kctl"><button aria-pressed="false" data-v="1">1</button><button aria-pressed="false" data-v="3">3</button><button aria-pressed="true" data-v="5">5</button><button aria-pressed="false" data-v="10">10</button></div></div>
+    <div><label>Show distance as</label><div class="seg-ctl o" id="metric"><button aria-pressed="true" data-v="cos">Cosine</button><button aria-pressed="false" data-v="ip">Dot</button><button aria-pressed="false" data-v="l2">L2²</button></div></div>
+  </div>
+  <div class="results" id="results" aria-live="polite"></div>
+  <div class="tip blue" id="asktip"><svg class="ic"><use href="#i-bulb"/></svg><span>Start with <b>“What are CMU’s quiet hours?”</b> on Word-50, k = 5. Is the actual time range in any result? Now try k = 10.</span></div>
+</div></section>
+
+<section class="slide mA" id="chunk" data-part="A" data-label="Chunking lab"><div class="inner reveal">
+  <div class="kicker"><span class="dot">A</span>Chunking · page 266</div>
+  <h2>Where does the answer land?</h2>
+  <p class="lead">This is the real text of the quiet-hours page. Change how it's cut. The <b style="color:var(--green)">green outline</b> marks the chunk that holds “8 pm – 8 am”. Retrieval works best when that chunk also says “quiet hours”.</p>
+  <div class="ctl-row">
+    <div><label>Strategy</label><div class="seg-ctl" id="cmode"><button aria-pressed="true" data-v="word">Words</button><button aria-pressed="false" data-v="sent">Sentences</button></div></div>
+    <div style="flex:1;min-width:180px"><label id="csizeL">Chunk size: 50 words</label><input type="range" id="csize" min="10" max="150" value="50"></div>
+    <div style="flex:1;min-width:180px"><label id="covL">Overlap: 10 words</label><input type="range" id="cov" min="0" max="40" value="10"></div>
+  </div>
+  <div class="chunkview" id="chunkview"></div>
+  <div class="kpi"><div class="tile b"><span class="big" id="kN">–</span><small>chunks on this page</small></div><div class="tile g"><span class="big" id="kTogether">–</span><small>“Quiet Hours” + the times in one chunk?</small></div><div class="tile o"><span class="big" id="kLen">–</span><small>words in the answer chunk</small></div></div>
+</div></section>
+
+<section class="slide mA" id="metric" data-part="A" data-label="Similarity metrics"><div class="inner reveal">
+  <div class="kicker"><span class="dot">A</span>Homework A.I · similarity metric</div>
+  <h2>Cosine, dot, or Euclidean?</h2>
+  <div class="grid3">
+    <div class="card"><h3>Cosine distance</h3><pre>1 − (a·b) / (‖a‖‖b‖)</pre><p style="font-size:15px">Compares <b>direction</b> only. Long and short passages compete fairly. 0 = same direction.</p></div>
+    <div class="card"><h3>Dot product (“ip”)</h3><pre>1 − a·b</pre><p style="font-size:15px">Direction <b>and</b> length. Fastest. Longer vectors score higher if they aren't normalized.</p></div>
+    <div class="card"><h3>Euclidean (“l2”)</h3><pre>‖a − b‖²   (Chroma: squared)</pre><p style="font-size:15px">Straight-line gap. Sensitive to vector length. Chroma reports the <b>squared</b> value.</p></div>
+  </div>
+  <div class="tip good"><svg class="ic"><use href="#i-bulb"/></svg><span>MiniLM outputs vectors of length 1. For unit vectors, <b>‖a−b‖² = 2 − 2·cos</b> and <b>a·b = cos</b>, so all three give the <b>same ranking</b>. The TA run built all three stores: the top-5 IDs matched for all 5 queries. Only the printed numbers change. Flip “Show distance as” on the previous slide to see it.</span></div>
+  <div class="quiz card soft" data-quiz>
+    <h3>Quick check: your store uses cosine. You switch to l2 and rebuild. What changes?</h3>
+    <div class="opts"><button data-ok="0">The top-5 results change</button><button data-ok="1">Only the distance numbers change</button><button data-ok="0">Nothing, not even the numbers</button></div>
+    <div class="feedback" role="status"></div>
+  </div>
+</div></section>
+
+<section class="slide mB" id="topk" data-part="B" data-label="top-k ladder"><div class="inner reveal">
+  <div class="kicker"><span class="dot">B</span>Part B · “What are CMU’s quiet hours?”</div>
+  <h2>Slide k and watch precision vs. recall</h2>
+  <div class="ctl-row">
+    <div style="flex:1;min-width:220px"><label id="kL">top-k = 5</label><input type="range" id="kslide" min="0" max="3" step="1" value="2" aria-label="top-k"></div>
+    <div><label>Who decides “relevant”?</label><div class="seg-ctl p" id="labeler"></div></div>
+  </div>
+  <div class="ladder" id="ladder"></div>
+  <div class="tip blue"><svg class="ic"><use href="#i-bulb"/></svg><span><b>Green</b> = scored ≥ 4 (relevant). ★ = holds “8 pm – 8 am”. <i>Grey italic</i> = a repeat of a chunk already returned. Click a rung to read it. In “Mine” mode, a click flips it between relevant and not, and precision/recall update instantly. Recall uses the <b>pool</b>: every relevant chunk any store returned in its top 10.</span></div>
+</div></section>
+
+<section class="slide mB" id="qidx" data-part="B" data-label="Question index"><div class="inner reveal">
+  <div class="kicker"><span class="dot">B</span>Experiment B.III · new index</div>
+  <h2>Search questions, return their chunk</h2>
+  <p class="lead">The third store indexes the <b>1,000 policy questions</b>. Each question carries one attached sentence chunk (its single closest match). Your query finds similar <i>questions</i>. You get back their <i>chunks</i>.</p>
+  <div class="qflow"><div id="qlist"></div><div class="arrow">→</div><div id="qchunks"></div></div>
+  <div class="tip warn" id="qtip"><svg class="ic"><use href="#i-bulb"/></svg><span></span></div>
+</div></section>
+
+<section class="slide mC" id="judge" data-part="C" data-label="LLM judges"><div class="inner reveal">
+  <div class="kicker"><span class="dot">C</span>Part C · who grades the grader?</div>
+  <h2>Three judges, same prompt</h2>
+  <div class="grid3" id="judges"></div>
+  <div class="tip warn"><svg class="ic"><use href="#i-bulb"/></svg><span>Asked to score <b>one</b> document, Gemma 270M returns scores for five documents it made up, three times in a row. The code then rejects the reply (“Expected 1 document scores, got 5”). That's the “judge failed” you see in Colab. A failed judgment is <b>missing data</b>, not a score of 1.</span></div>
+  <div class="quiz card soft" data-quiz>
+    <h3>The starter's construct is “factuality: whether the information is true”. Why is that weak for judging retrieval?</h3>
+    <div class="opts"><button data-ok="0">Small models can't spell factuality</button><button data-ok="1">Every handbook passage is “true”, so it can't tell a good hit from an off-topic one</button><button data-ok="0">Likert scales don't work with factuality</button></div>
+    <div class="feedback" role="status"></div>
+  </div>
+</div></section>
+
+<section class="slide mC" id="table" data-part="C" data-label="C.II table"><div class="inner reveal">
+  <div class="kicker"><span class="dot">C</span>Homework C.II · the metrics table</div>
+  <h2>What the TA run reported</h2>
+  <div class="ctl-row"><div><label>Judge</label><div class="seg-ctl o" id="tjudge"></div></div></div>
+  <div class="tscroll card" style="padding:8px 12px"><table id="ctable"></table></div>
+  <div class="tip blue"><svg class="ic"><use href="#i-bulb"/></svg><span><b>Precision@k</b> = relevant ÷ unique results in the top k. <b>Recall@k</b> = relevant found ÷ all relevant chunks in the pool. The starter's <code>evaluate_precision_recall</code> has no pool, so with one document per question its “recall” is just 0 or 1. Say so in your report.</span></div>
+</div></section>
+
+<section class="slide mC" id="cost" data-part="C" data-label="Cost"><div class="inner reveal">
+  <div class="kicker"><span class="dot">C</span>Average cost metric</div>
+  <h2>What would this judge cost on an API?</h2>
+  <div class="grid2">
+    <div class="card">
+      <div class="grid2" style="gap:12px">
+        <div><label class="kicker" for="cin">Input tokens / call</label><input id="cin" type="number" min="0" value="300"></div>
+        <div><label class="kicker" for="cout">Output tokens / call</label><input id="cout" type="number" min="0" value="100"></div>
+        <div><label class="kicker" for="pin">$ per 1M input</label><input id="pin" type="number" min="0" step="0.01" value="0.04"></div>
+        <div><label class="kicker" for="pout">$ per 1M output</label><input id="pout" type="number" min="0" step="0.01" value="0.08"></div>
+        <div><label class="kicker" for="calls">Judge calls / search (= unique results)</label><input id="calls" type="number" min="1" value="5"></div>
+      </div>
+    </div>
+    <div class="card soft" style="display:grid;align-content:center;text-align:center">
+      <span class="kicker" style="justify-content:center">Cost of one search</span>
+      <span id="costOut" style="font:800 46px "Bricolage Grotesque",sans-serif;color:var(--brand)">$0</span>
+      <span id="costPer" style="color:var(--muted)"></span>
+    </div>
+  </div>
+  <div class="tip warn"><svg class="ic"><use href="#i-bulb"/></svg><span>Defaults are the TA run's gemma3:4b averages. Prices for small open models <b>disagree across listing sites</b> (we saw $0.04–0.05 in and $0.05–0.10 out per 1M for Gemma 3 4B). Write down <b>which page and date</b> you used. A model running in your own Colab costs $0 per token. Say that, then give the API price-equivalent.</span></div>
+</div></section>
+
+<section class="slide mD" id="report" data-part="D" data-label="Report checklist"><div class="inner reveal">
+  <div class="kicker"><span class="dot">D</span>Part D · before you submit</div>
+  <h2>Report checklist</h2>
+  <div class="grid2" id="checklist"></div>
+</div></section>
+
+<section class="slide mD" id="faq" data-part="D" data-label="Ask the TA"><div class="inner reveal">
+  <div class="kicker"><span class="dot">D</span>Office hours · ask in your own words</div>
+  <h2>Ask the TA</h2>
+  <div class="askbar"><input id="fq" type="text" placeholder="e.g. my judge keeps failing, what do I do?" aria-label="Question for the FAQ" autocomplete="off"></div>
+  <div class="status" id="fstatus"><span class="pip"></span><span>This search is itself a tiny retriever: your question and every FAQ answer are embedded with the same MiniLM model.</span></div>
+  <div class="faqlist" id="faqlist" style="margin-top:12px"></div>
+</div></section>
+
+</main>
+<script src="data.js"></script>
+<script src="app.js" defer></script>
+</body></html>
