@@ -48,6 +48,15 @@
   </div>
 </div><a class="btn next" href="#ask" aria-label="Next slide"><svg class="ic"><use href="#i-down"/></svg></a></section>
 
+<section class="slide mA" id="pipeline" data-part="A" data-label="How retrieval works"><div class="inner reveal">
+  <div class="kicker"><span class="dot">A</span>The big picture · press play</div>
+  <h2>How a question finds its answer</h2>
+  <div class="card pipe-card"><div id="pipe"></div>
+    <div class="pipe-foot"><div class="pipe-steps" id="pipeSteps"></div><p class="pipe-cap" id="pipeCap" aria-live="polite"></p>
+    <div class="pipe-ctl"><button type="button" id="pipePrev" aria-label="Previous step">◀</button><button type="button" class="primary" id="pipePlay">Play</button><button type="button" id="pipeNext" aria-label="Next step">▶</button></div></div>
+  </div>
+</div></section>
+
 <section class="slide mA" id="ask" data-part="A" data-label="Ask the handbook"><div class="inner reveal">
   <div class="kicker"><span class="dot">A</span>Part A · try it yourself</div>
   <h2>Ask the handbook anything</h2>
@@ -63,6 +72,20 @@
   </div>
   <div class="results" id="results" aria-live="polite"></div>
   <div class="tip blue" id="asktip"><svg class="ic"><use href="#i-bulb"/></svg><span>Start with <b>“What are CMU’s quiet hours?”</b> on Word-50, k = 5. Is the actual time range in any result? Now try k = 10.</span></div>
+</div></section>
+
+<section class="slide mA" id="space" data-part="A" data-label="See the search"><div class="inner reveal">
+  <div class="kicker"><span class="dot">A</span>Same search, drawn as a dartboard</div>
+  <h2>Your question sits in the middle</h2>
+  <p class="lead">Each dot is a chunk. <b>Closer to the centre = smaller cosine distance.</b> The angle shows <i>where in the handbook</i> it lives (page 1 at the top, going clockwise). The dashed circle is your top-k: everything inside gets returned.</p>
+  <div class="ctl-row">
+    <div><label>Question</label><div class="chips" id="spPresets"></div></div>
+  </div>
+  <div class="ctl-row">
+    <div><label>Vector store</label><div class="seg-ctl" id="spStore"><button aria-pressed="true" data-v="word">Word-50</button><button aria-pressed="false" data-v="sent">Sentence-4</button><button aria-pressed="false" data-v="qidx">Question index</button></div></div>
+    <div style="flex:1;min-width:200px"><label id="spKL">top-k = 5</label><input type="range" id="spK" min="1" max="20" value="5"></div>
+  </div>
+  <div class="space-wrap"><div class="card space-card" id="space-svg"></div><div class="card soft space-side" id="spaceSide"></div></div>
 </div></section>
 
 <section class="slide mA" id="chunk" data-part="A" data-label="Chunking lab"><div class="inner reveal">
@@ -86,6 +109,7 @@
     <div class="card"><h3>Dot product (“ip”)</h3><pre>1 − a·b</pre><p style="font-size:15px">Direction <b>and</b> length. Fastest. Longer vectors score higher if they aren't normalized.</p></div>
     <div class="card"><h3>Euclidean (“l2”)</h3><pre>‖a − b‖²   (Chroma: squared)</pre><p style="font-size:15px">Straight-line gap. Sensitive to vector length. Chroma reports the <b>squared</b> value.</p></div>
   </div>
+  <div class="card vecplay" id="vecplay"></div>
   <div class="tip good"><svg class="ic"><use href="#i-bulb"/></svg><span>MiniLM outputs vectors of length 1. For unit vectors, <b>‖a−b‖² = 2 − 2·cos</b> and <b>a·b = cos</b>, so all three give the <b>same ranking</b>. The TA run built all three stores: the top-5 IDs matched for all 5 queries. Only the printed numbers change. Flip “Show distance as” on the previous slide to see it.</span></div>
   <div class="quiz card soft" data-quiz>
     <h3>Quick check: your store uses cosine. You switch to l2 and rebuild. What changes?</h3>
@@ -101,6 +125,7 @@
     <div style="flex:1;min-width:220px"><label id="kL">top-k = 5</label><input type="range" id="kslide" min="0" max="3" step="1" value="2" aria-label="top-k"></div>
     <div><label>Who decides “relevant”?</label><div class="seg-ctl p" id="labeler"></div></div>
   </div>
+  <div class="card poolmap" id="poolmap"></div>
   <div class="ladder" id="ladder"></div>
   <div class="tip blue"><svg class="ic"><use href="#i-bulb"/></svg><span><b>Green</b> = scored ≥ 4 (relevant). ★ = holds “8 pm – 8 am”. <i>Grey italic</i> = a repeat of a chunk already returned. Click a rung to read it. In “Mine” mode, a click flips it between relevant and not, and precision/recall update instantly. Recall uses the <b>pool</b>: every relevant chunk any store returned in its top 10.</span></div>
 </div></section>
@@ -109,7 +134,7 @@
   <div class="kicker"><span class="dot">B</span>Experiment B.III · new index</div>
   <h2>Search questions, return their chunk</h2>
   <p class="lead">The third store indexes the <b>1,000 policy questions</b>. Each question carries one attached sentence chunk (its single closest match). Your query finds similar <i>questions</i>. You get back their <i>chunks</i>.</p>
-  <div class="qflow"><div id="qlist"></div><div class="arrow">→</div><div id="qchunks"></div></div>
+  <div class="qflow"><svg class="qlines" id="qlines" aria-hidden="true"></svg><div id="qlist"></div><div class="arrow">→</div><div id="qchunks"></div></div>
   <div class="tip warn" id="qtip"><svg class="ic"><use href="#i-bulb"/></svg><span></span></div>
 </div></section>
 
@@ -117,6 +142,8 @@
   <div class="kicker"><span class="dot">C</span>Part C · who grades the grader?</div>
   <h2>Three judges, same prompt</h2>
   <div class="grid3" id="judges"></div>
+  <div class="typer-head"><h3>Watch them answer the same 1-passage prompt</h3><button type="button" id="typerPlay">Replay</button></div>
+  <div class="grid2" id="typer"></div>
   <div class="tip warn"><svg class="ic"><use href="#i-bulb"/></svg><span>Asked to score <b>one</b> document, Gemma 270M returns scores for five documents it made up, three times in a row. The code then rejects the reply (“Expected 1 document scores, got 5”). That's the “judge failed” you see in Colab. A failed judgment is <b>missing data</b>, not a score of 1.</span></div>
   <div class="quiz card soft" data-quiz>
     <h3>The starter's construct is “factuality: whether the information is true”. Why is that weak for judging retrieval?</h3>
@@ -172,4 +199,5 @@
 </main>
 <script src="data.js"></script>
 <script src="app.js" defer></script>
+<script src="visuals.js" defer></script>
 </body></html>

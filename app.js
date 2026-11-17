@@ -228,7 +228,7 @@ function renderChunks() {
   const chunks = [];
   for (let i = 0; i < items.length; i += size - ov) { chunks.push(items.slice(i, i + size).join(" ")); if (i + size >= items.length) break; }
   const full = (c) => c.includes(ANSWER) && c.includes("Midnight - 9 am") && /finals week/.test(c);
-  $("#chunkview").innerHTML = chunks.map((c, i) => `<span class="ck ck${i % 4}${c.includes(ANSWER) ? " has-answer" : ""}"><span class="cknum">${i + 1}</span>${esc(c).replace(/(Quiet Hours|quiet hours)/g, "<b>$1</b>").replace(/8 pm - 8 am|Midnight - 9 am/g, "<mark>$&</mark>")}</span> `).join("");
+  $("#chunkview").innerHTML = chunks.map((c, i) => `<span class="ck ck${i % 4}${c.includes(ANSWER) ? " has-answer" : ""}" style="animation-delay:${Math.min(i, 30) * 28}ms"><span class="cknum">${i + 1}</span>${esc(c).replace(/(Quiet Hours|quiet hours)/g, "<b>$1</b>").replace(/8 pm - 8 am|Midnight - 9 am/g, "<mark>$&</mark>")}</span> `).join("");
   const ansChunks = chunks.filter((c) => c.includes(ANSWER));
   $("#kN").textContent = chunks.length;
   $("#kTogether").textContent = chunks.some(full) ? "Yes" : "No";
@@ -288,9 +288,9 @@ renderLadder();
   const rows = D.sweeps.filter((r) => r.store.startsWith("B3") && r.k === 10).sort((a, b) => a.rank - b.rank);
   const counts = new Map(); rows.forEach((r) => counts.set(r.resp, (counts.get(r.resp) || 0) + 1));
   const letters = new Map([...counts.keys()].map((r, i) => [r, String.fromCharCode(65 + i)]));
-  $("#qlist").innerHTML = `<h3>Nearest stored questions</h3>` + rows.map((r) => `<div class="qq"><span class="badge p tag">${r.rank}</span><span>${esc(r.matched_question)}</span><span class="badge ${counts.get(r.resp) > 1 ? "o" : "b"} tag" style="margin-left:auto">${letters.get(r.resp)}</span></div>`).join("");
+  $("#qlist").innerHTML = `<h3>Nearest stored questions</h3>` + rows.map((r) => `<div class="qq" data-l="${letters.get(r.resp)}"><span class="badge p tag">${r.rank}</span><span>${esc(r.matched_question)}</span><span class="badge ${counts.get(r.resp) > 1 ? "o" : "b"} tag" style="margin-left:auto">${letters.get(r.resp)}</span></div>`).join("");
   $("#qchunks").innerHTML = `<h3>Chunks you get back</h3>` + [...counts.entries()].map(([resp, n]) => { const t = D.pool[resp].text;
-    return `<div class="chunkcard${n > 1 ? " hot" : ""}"><span class="badge ${n > 1 ? "o" : "b"}">${letters.get(resp)}</span> <b>${n}×</b> ${t.includes(ANSWER) ? '<span class="badge g">has the hours</span>' : '<span class="badge r">no hours</span>'}<p style="margin:6px 0 0;font-size:13px;max-width:none">${esc(t.slice(0, 230))}…</p></div>`; }).join("");
+    return `<div class="chunkcard${n > 1 ? " hot" : ""}" data-l="${letters.get(resp)}"><span class="badge ${n > 1 ? "o" : "b"}">${letters.get(resp)}</span> <b>${n}×</b> ${t.includes(ANSWER) ? '<span class="badge g">has the hours</span>' : '<span class="badge r">no hours</span>'}<p style="margin:6px 0 0;font-size:13px;max-width:none">${esc(t.slice(0, 230))}…</p></div>`; }).join("");
   const [topResp, topN] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
   $("#qtip span").innerHTML = `${topN} of the top 10 questions point to chunk <b>${letters.get(topResp)}</b>, which ${D.pool[topResp].text.includes(ANSWER) ? "does" : "<b>does not</b>"} contain “8 pm – 8 am”. The questions were right; the <b>question→chunk link</b> (top-1 match) was wrong. Ways to fix it: attach the top 2–3 chunks per question, or use bigger chunks for the attachment.`;
 })();
