@@ -185,7 +185,7 @@ setTimeout(loadModel, 500);
     "<b>2 · Embed.</b> A model turns every chunk into 384 numbers: an arrow in “meaning space”. Similar meaning, similar arrow.",
     "<b>3 · Store.</b> A vector database (Chroma) keeps every arrow plus an index, so it can find near neighbours fast.",
     `<b>4 · Ask.</b> Your question becomes an arrow too. The store hands back the k closest chunks. The top hit here comes from <i>${esc(top3[0].sec)}</i>.`,
-    `<b>5 · Judge.</b> Close is not the same as useful. ${good} of these 3 actually contain the answer, so precision@3 = ${good}/3. Measuring this properly is Part C.`,
+    `<b>5 · Judge.</b> Close is not the same as useful. ${good} of these 3 actually contain the answer, so precision@3 = ${good}/3.`,
   ];
   const vecBars = (x, y, seed, h = 24) => Array.from({ length: 12 }, (_, j) => {
     const v = Math.abs(Math.sin(seed * 12.9898 + j * 78.233)) % 1, hh = 6 + v * h;
@@ -389,47 +389,40 @@ $("#spaceSide").addEventListener("click", (e) => { const a = e.target.closest(".
 whenVisible($("#search"), () => { if (!searchSeen) { searchSeen = true; runSearch(); } }, 0.25);
 
 /* ================================================================ 5. precision & recall */
-const PR = { pi: Math.max(0, PRESETS.findIndex((p) => p.label === "Being quiet")), k: 3, labeler: "key", sel: null };
+// Plaid House is tiny, so we know every chunk that holds the answer. Recall uses all of them.
+const PR = { pi: Math.max(0, PRESETS.findIndex((p) => p.label === "Being quiet")), k: 3, sel: null };
 const STORE_NAMES = { word: "50 words", sent: "4 sentences" };
 chips("#pPresets", PRESETS, (i) => { PR.pi = i; PR.sel = null; renderPR(); }, PR.pi);
-segCtl("#labeler", (v) => { PR.labeler = v; renderPR(); });
 $("#pk").addEventListener("input", () => { PR.k = +$("#pk").value; renderPR(); });
-function poolFor(pi) {
-  const qv = Float32Array.from(PRESETS[pi].emb), pool = [];
-  for (const name of ["word", "sent"])
-    rankAll(BUILT[name], qv).slice(0, 10).forEach((h, r) => pool.push({ id: name[0] + h.i, store: name, r: r + 1, text: BUILT[name].text[h.i], pos: BUILT[name].pos[h.i] }));
-  return pool;
+function rankedFor(pi, name) {
+  const qv = Float32Array.from(PRESETS[pi].emb), facts = PRESETS[pi].facts;
+  return rankAll(BUILT[name], qv).map((h, r) => ({ id: name[0] + h.i, store: name, r: r + 1, text: BUILT[name].text[h.i], pos: BUILT[name].pos[h.i], rel: hasFact(BUILT[name].text[h.i], facts) }));
 }
-const mineKey = (pi) => `hw02-mine-v2-${pi}`;
-function relSet(pi, pool) {
-  const key = pool.filter((x) => hasFact(x.text, PRESETS[pi].facts)).map((x) => x.id);
-  return new Set(PR.labeler === "key" ? key : store.get(mineKey(pi), key));
-}
-function prAt(pool, rel, name, k) {
-  const got = pool.filter((x) => x.store === name && x.r <= k), hits = got.filter((x) => rel.has(x.id)).length;
-  return { P: got.length ? hits / got.length : 0, R: rel.size ? hits / rel.size : null, got: new Set(got.map((x) => x.id)) };
+function prAt(list, k) {
+  const total = list.filter((x) => x.rel).length, hits = list.filter((x) => x.r <= k && x.rel).length;
+  return { P: hits / k, R: total ? hits / total : null, total };
 }
 function renderPR() {
-  const pool = poolFor(PR.pi), rel = relSet(PR.pi, pool), k = PR.k;
+  const k = PR.k, lists = { word: rankedFor(PR.pi, "word"), sent: rankedFor(PR.pi, "sent") };
   $("#pkL").textContent = `top-k = ${k}`;
-  const dotsFor = (f) => ["word", "sent"].map((name) => `<span class="pm-half">${pool.filter((x) => x.store === name).map(f).join("")}</span>`).join("");
   const rows = ["word", "sent"].map((name) => {
-    const m = prAt(pool, rel, name, k);
-    return `<div class="pm-row"><span class="pm-name">${STORE_NAMES[name]}</span><span class="pm-dots">${dotsFor((x, j) => `<i class="pmd${x.store !== name ? " na" : ""}${m.got.has(x.id) ? " got" : ""}${m.got.has(x.id) && rel.has(x.id) ? " catch" : ""}" data-id="${x.id}" style="transition-delay:${j * 18}ms"></i>`)}</span>
+    const m = prAt(lists[name], k);
+    const dots = lists[name].map((x, j) => `<i class="pmd${x.rel ? " rel" : ""}${x.r <= k ? " got" : " out"}${x.r <= k && x.rel ? " catch" : ""}${PR.sel === x.id ? " sel" : ""}" data-id="${x.id}" title="rank ${x.r}" style="transition-delay:${j * 14}ms"></i>`).join("");
+    return `<div class="pm-row"><span class="pm-name">${STORE_NAMES[name]}</span><span class="pm-dots">${dots}</span>
       <span class="pm-pr"><span class="pm-bar"><i style="width:${m.P * 100}%"></i></span>P ${m.P.toFixed(2)} <span class="pm-bar r"><i style="width:${(m.R ?? 0) * 100}%"></i></span>R ${m.R == null ? "n/a" : m.R.toFixed(2)}</span></div>`;
   }).join("");
-  $("#poolmap").innerHTML = `<div class="pm-head"><h3>The pool: every chunk either store returned in its top 10</h3>
-    <span class="pm-legend"><i class="pmd rel"></i> relevant <i class="pmd"></i> not relevant <i class="pmd got"></i> returned at k = ${k}</span></div>
-    <div class="pm-row"><span class="pm-name">relevant?</span><span class="pm-dots">${dotsFor((x, j) => `<i class="pmd${rel.has(x.id) ? " rel" : ""}${PR.labeler === "mine" ? " click" : ""}${PR.sel === x.id ? " sel" : ""}" data-id="${x.id}" title="${esc(x.text.slice(0, 110))}" style="transition-delay:${j * 18}ms"></i>`)}</span><span class="pm-pr"><b>${rel.size}</b> relevant</span></div>
+  const none = !PRESETS[PR.pi].facts.length;
+  $("#poolmap").innerHTML = `<div class="pm-head"><h3>Every chunk, ranked from closest to furthest</h3>
+    <span class="pm-legend"><i class="pmd rel"></i> has the answer <i class="pmd got"></i> returned at k = ${k} <i class="pmd out"></i> not returned</span></div>
     ${rows}
-    <p class="pm-note">${rel.size ? `<b>Precision</b> = green dots returned ÷ all dots returned. <b>Recall</b> = green dots returned ÷ all green dots in the pool. Each store can only return its own half, so a relevant chunk that exists only in the other store's chunking counts against it.` : `No chunk in the pool is relevant, so recall is <b>undefined</b> (0 ÷ 0). Say that, rather than writing 0 or 1.`}${PR.labeler === "mine" ? " <b>You're the judge:</b> click dots in the top row to flip them." : ""}</p>`;
+    <p class="pm-note">${none ? "Nothing in the guide answers this question, so recall is 0 ÷ 0: it can't be computed." : "<b>Precision</b> = green dots returned ÷ k. <b>Recall</b> = green dots returned ÷ all green dots in that row."}</p>`;
   const W = 380, H = 230, L = 34, B = 30, T = 14, Rt = 12, xs = (kk) => L + ((kk - 1) / 9) * (W - L - Rt), ys = (v) => T + (1 - v) * (H - T - B);
   const series = [];
   for (const name of ["word", "sent"]) {
-    const pts = Array.from({ length: 10 }, (_, i) => prAt(pool, rel, name, i + 1));
-    const path = (key) => pts.map((m, i) => `${i ? "L" : "M"}${xs(i + 1).toFixed(1)} ${ys(m[key]).toFixed(1)}`).join(" ");
+    const pts = Array.from({ length: 10 }, (_, i) => prAt(lists[name], i + 1));
+    const path = (key) => pts.map((m, i) => `${i ? "L" : "M"}${xs(i + 1).toFixed(1)} ${ys(m[key] ?? 0).toFixed(1)}`).join(" ");
     series.push({ name, kind: "P", d: path("P") });
-    if (rel.size) series.push({ name, kind: "R", d: path("R") });
+    if (!none) series.push({ name, kind: "R", d: path("R") });
   }
   $("#prchart").innerHTML = `<h3 style="margin:0 0 6px">As k grows…</h3><svg viewBox="0 0 ${W} ${H}" class="prsvg" role="img" aria-label="Precision and recall for k from 1 to 10">
     ${[0, 0.5, 1].map((v) => `<line x1="${L}" x2="${W - Rt}" y1="${ys(v)}" y2="${ys(v)}" class="grid"/><text x="${L - 6}" y="${ys(v) + 4}" text-anchor="end" class="ax">${v}</text>`).join("")}
@@ -438,20 +431,14 @@ function renderPR() {
     <line x1="${xs(k)}" x2="${xs(k)}" y1="${T - 4}" y2="${H - B}" class="kline"/>
     ${series.map((s) => `<path d="${s.d}" class="pl ${s.name} ${s.kind}"/>`).join("")}</svg>
     <div class="pr-legend"><span><i class="sw word P"></i>precision · 50 words</span><span><i class="sw word R"></i>recall · 50 words</span><span><i class="sw sent P"></i>precision · 4 sentences</span><span><i class="sw sent R"></i>recall · 4 sentences</span></div>`;
-  const x = pool.find((p) => p.id === PR.sel);
+  const x = [...lists.word, ...lists.sent].find((p) => p.id === PR.sel);
   $("#poolSel").innerHTML = x
-    ? `<p class="kicker" style="margin:0 0 4px">${STORE_NAMES[x.store]} · rank ${x.r} · ${esc(sectionAt(x.pos))} · ${rel.has(x.id) ? '<span class="badge g">relevant</span>' : '<span class="badge r">not relevant</span>'}</p><p style="font-size:14px;margin:0">${markFacts(esc(x.text), PRESETS[PR.pi].facts)}</p>`
+    ? `<p class="kicker" style="margin:0 0 4px">${STORE_NAMES[x.store]} · rank ${x.r} · ${esc(sectionAt(x.pos))} · ${x.rel ? '<span class="badge g">has the answer</span>' : '<span class="badge r">no answer</span>'}</p><p style="font-size:14px;margin:0">${markFacts(esc(x.text), PRESETS[PR.pi].facts)}</p>`
     : `<p style="margin:0;color:var(--muted);font-size:14px">“${esc(PRESETS[PR.pi].q)}” · click any dot to read its chunk.</p>`;
 }
 $("#poolmap").addEventListener("click", (e) => {
   const d = e.target.closest(".pmd[data-id]"); if (!d) return;
-  PR.sel = d.dataset.id;
-  if (PR.labeler === "mine" && d.classList.contains("click")) {
-    const s = relSet(PR.pi, poolFor(PR.pi));
-    s.has(PR.sel) ? s.delete(PR.sel) : s.add(PR.sel);
-    store.set(mineKey(PR.pi), [...s]);
-  }
-  renderPR();
+  PR.sel = d.dataset.id; renderPR();
 });
 renderPR();
 
@@ -468,11 +455,9 @@ function renderQidx(animate) {
     return `<div class="qq" data-l="${letters.get(c)}"><span class="badge p tag">${r + 1}</span><span>${esc(D.qidx.text[h.i])}</span><span class="badge ${counts.get(c) > 1 ? "o" : "b"} tag" style="margin-left:auto">${letters.get(c)}</span></div>`; }).join("");
   $("#qchunks").innerHTML = `<h3>Chunks you get back</h3>` + [...counts.entries()].map(([c, n]) => { const t = BUILT.sent.text[c], ans = P.facts.length && hasFact(t, P.facts);
     return `<div class="chunkcard${n > 1 ? " hot" : ""}" data-l="${letters.get(c)}"><span class="badge ${n > 1 ? "o" : "b"}">${letters.get(c)}</span> <b>${n}×</b> ${P.facts.length ? (ans ? '<span class="badge g">has the answer</span>' : '<span class="badge r">no answer</span>') : ""}<p style="margin:6px 0 0;font-size:13px;max-width:none">${markFacts(esc(t), P.facts)}</p></div>`; }).join("");
-  const [topC, topN] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
   const found = P.facts.length && [...counts.keys()].some((c) => hasFact(BUILT.sent.text[c], P.facts));
-  $("#qtip").innerHTML = `${QX.k} questions → <b>${counts.size} unique chunk${counts.size > 1 ? "s" : ""}</b>. ` +
-    (topN > 1 ? `${topN} questions share chunk <b>${letters.get(topC)}</b>: each stored question keeps only <i>one</i> attached chunk, so if that link is wrong, the mistake repeats. ` : "") +
-    (!P.facts.length ? "This question has no answer in the guide, yet the index still returns chunks." : found ? "The answer is in at least one of them." : "None of them holds the answer, even though the matched <i>questions</i> look right. The weak spot is the question→chunk link.");
+  $("#qtip").innerHTML = `${QX.k} matched questions → <b>${counts.size} unique chunk${counts.size > 1 ? "s" : ""}</b>. Each stored question carries one chunk. ` +
+    (!P.facts.length ? "This question has no answer in the guide, yet the index still returns chunks." : found ? "The answer is in at least one of them." : "None of them holds the answer.");
   requestAnimationFrame(() => drawQLines(animate));
 }
 function drawQLines(animate) {
@@ -493,73 +478,7 @@ renderQidx(false);
 whenVisible($("#qidx"), () => drawQLines(true), 0.3);
 addEventListener("resize", () => drawQLines(false));
 
-/* ================================================================ 7. judge replay (illustrative) */
-(function judge() {
-  const passage = "The quiet study room on the second floor is open all day, every day. Phone calls and talking are not allowed in the quiet study room at any time.";
-  const TYPED = [
-    { name: "a tiny model", cls: "bad",
-      reply: `Sure! Here are the scores:\n{\n  "documents": [\n    {"id": 1, "score": 5, "why": "mentions quiet"},\n    {"id": 2, "score": 4, "why": "relevant"},\n    {"id": 3, "score": 4, "why": "the document is`,
-      stamp: "✗ Failed: extra text, 3 scores for 1 passage, cut off. Count it as missing." },
-    { name: "a larger model", cls: "good",
-      reply: `{\n  "score": 2,\n  "rationale": "It is about a quiet study room, not about when residents must keep noise down. It does not answer the question."\n}`,
-      stamp: "✓ Valid: one passage, one score, a reason that matches the anchors." },
-  ];
-  $("#typer").innerHTML = TYPED.map((t, i) => `<div class="term ${t.cls}"><div class="term-bar"><span></span><span></span><span></span><b>${t.name}</b></div>
-    <p class="term-prompt">Question: <i>When do I have to be quiet?</i><br>Passage: “${esc(passage)}”<br>Rate relevance 1–5 using the anchors. Reply only with JSON.</p>
-    <pre class="term-out" id="tout${i}"></pre><div class="stamp" id="tstamp${i}">${t.stamp}</div></div>`).join("")
-    + `<p class="pm-note" style="grid-column:1/-1">Illustrative replies written for this demo, showing patterns you may meet. Notice the trap: the passage contains the word “quiet” but doesn't answer the question.</p>`;
-  let timers = [];
-  function play() {
-    timers.forEach(clearInterval); timers = [];
-    TYPED.forEach((t, i) => {
-      const out = $(`#tout${i}`), stamp = $(`#tstamp${i}`);
-      stamp.classList.remove("show");
-      if (REDUCE) { out.textContent = t.reply; stamp.classList.add("show"); return; }
-      let n = 0; out.textContent = "";
-      const id = setInterval(() => { n += 3; out.textContent = t.reply.slice(0, n); if (n >= t.reply.length) { clearInterval(id); setTimeout(() => stamp.classList.add("show"), 250); } }, 18);
-      timers.push(id);
-    });
-  }
-  $("#typerPlay").addEventListener("click", play);
-  let done = false;
-  whenVisible($("#typer"), () => { if (!done) { done = true; play(); } }, 0.4);
-})();
-
-/* ================================================================ 8. cost */
-(function cost() {
-  const calc = () => {
-    const per = (+$("#cin").value * +$("#pin").value + +$("#cout").value * +$("#pout").value) / 1e6, tot = per * +$("#calls").value;
-    $("#costOut").textContent = tot < 0.01 ? `$${tot.toFixed(6)}` : `$${tot.toFixed(4)}`;
-    $("#costPer").innerHTML = `= (${esc($("#cin").value)} × ${esc($("#pin").value)} + ${esc($("#cout").value)} × ${esc($("#pout").value)}) ÷ 1,000,000 × ${esc($("#calls").value)}<br>≈ ${tot > 0 ? Math.floor(1 / tot).toLocaleString() : "∞"} searches per $1`;
-  };
-  $$("#cost input").forEach((i) => i.addEventListener("input", calc)); calc();
-})();
-
-/* ================================================================ 9. game plan */
-const PLAN = [
-  { part: "A", title: "Build a vector store", cls: "b",
-    do: ["Run the setup cells and check every path says it was found", "Chunk the handbook and note how many chunks you got", "Embed, add to Chroma, and check collection.count()", "Run the required queries and save the results"],
-    ask: ["Which distance metric did I choose, and why?", "For each query: did I find the answer in the PDF myself first?", "When a result was poor, what did that chunk actually contain?"] },
-  { part: "B", title: "Experiment with k and chunks", cls: "o",
-    do: ["Pick one query with a single answer you can check", "Run k = 1, 3, 5, 10 and record only the new results each time", "Build a second chunking in a new, differently named collection", "Build the question index and read chunks from the metadata"],
-    ask: ["At which k did the answer first appear, and why there?", "Did my second chunking change where the answer lands?", "Did the question index repeat chunks? Why?"] },
-  { part: "C", title: "Judge and measure", cls: "g",
-    do: ["Write a construct and an anchor for every score", "Label a sample yourself before looking at the judge", "Run the judge, count failures, keep them as missing", "Compute precision and recall from a stated pool; time searches; estimate cost"],
-    ask: ["Could an off-topic passage score high on my construct?", "How well does the judge agree with my own labels?", "What exactly is the denominator of my recall?"] },
-  { part: "D", title: "Write it up", cls: "p",
-    do: ["Give every design choice one reason", "Back each claim with a chunk, a number or a screenshot", "List the limitations you know about", "Submit the report, spreadsheet and code; share the sheet"],
-    ask: ["Could a classmate repeat my experiment from my report alone?", "Where am I guessing, and did I say so?"] },
-];
-const planDone = new Set(store.get("hw02-plan", []));
-$("#planGrid").innerHTML = PLAN.map((p, pi) => `<div class="card plan"><h3><span class="badge ${p.cls}">Part ${p.part}</span> ${esc(p.title)}</h3>
-  ${p.do.map((t, i) => { const id = `${pi}-${i}`; return `<label class="check${planDone.has(id) ? " done" : ""}"><input type="checkbox" data-id="${id}"${planDone.has(id) ? " checked" : ""}><span>${esc(t)}</span></label>`; }).join("")}
-  <p class="plan-ask"><b>Ask yourself</b></p><ul>${p.ask.map((a) => `<li>${esc(a)}</li>`).join("")}</ul></div>`).join("");
-$("#planGrid").addEventListener("change", (e) => {
-  const id = e.target.dataset.id; e.target.checked ? planDone.add(id) : planDone.delete(id);
-  e.target.closest(".check").classList.toggle("done", e.target.checked); store.set("hw02-plan", [...planDone]);
-});
-
-/* ================================================================ 10. FAQ */
+/* ================================================================ 7. FAQ */
 function md(s) {
   const inline = (t) => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
   const out = []; let list = null, ordered = false, code = null;
@@ -585,7 +504,7 @@ $("#fcats").addEventListener("click", (e) => {
   $("#fq").value = ""; renderFaq(FAQ.map((_, i) => i).filter((i) => fcat === "All" || FAQ[i].cat === fcat));
 });
 function renderFaq(order, scores) {
-  $("#faqlist").innerHTML = order.map((i, r) => `<details class="faqhit"${r === 0 && scores ? " open" : ""}><summary><span class="badge p">${esc(FAQ[i].cat.replace("Concepts: ", ""))}</span>${esc(FAQ[i].q)}${scores ? `<span class="match">${scores[i].toFixed(2)}</span>` : ""}</summary><div class="body">${md(FAQ[i].a)}</div></details>`).join("");
+  $("#faqlist").innerHTML = order.map((i, r) => `<details class="faqhit"${r === 0 && scores ? " open" : ""}><summary><span class="badge p">${esc(FAQ[i].cat)}</span>${esc(FAQ[i].q)}${scores ? `<span class="match">${scores[i].toFixed(2)}</span>` : ""}</summary><div class="body">${md(FAQ[i].a)}</div></details>`).join("");
 }
 renderFaq(FAQ.map((_, i) => i));
 let ft;

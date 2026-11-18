@@ -24,7 +24,7 @@
     <div class="seg" data-part="A" title="Part A"><span></span></div><div class="seg" data-part="B" title="Part B"><span></span></div><div class="seg" data-part="C" title="Part C"><span></span></div><div class="seg" data-part="D" title="Part D"><span></span></div>
   </div>
   <span class="streak" title="Slides visited"><svg class="ic" aria-hidden="true"><use href="#i-flame"/></svg><span id="streak">0</span></span>
-  <span id="counter">1 / 11</span>
+  <span id="counter">1 / 9</span>
   <button id="theme" type="button" aria-label="Toggle color theme">Theme</button>
 </div></header>
 <nav class="dots" id="dots" aria-label="Slides"></nav>
@@ -41,7 +41,7 @@
       <div class="card soft"><span class="badge o">2 · Try</span><p>Everything runs on <b>Plaid House</b>, a tiny made-up dorm guide (about 950 words), so you can see every piece at once.</p></div>
       <div class="card soft"><span class="badge g">3 · Do it yourself</span><p>Then repeat the idea on the real handbook in your notebook. Your results, your explanations.</p></div>
     </div>
-    <div class="ctas"><a class="btn primary" href="#pipeline">Start the tour</a><a class="btn" href="#plan">I want a plan</a><a class="btn" href="#faq"><svg class="ic"><use href="#i-chat"/></svg>Ask the TA</a></div>
+    <div class="ctas"><a class="btn primary" href="#pipeline">Start the tour</a><a class="btn" href="#faq"><svg class="ic"><use href="#i-chat"/></svg>Ask the TA</a></div>
   </div>
   <div class="recipe">
     <span class="scotty-sticker" title="Woof. Let's learn how search works."><svg aria-hidden="true"><use href="#i-scotty"/></svg></span>
@@ -71,7 +71,7 @@
     <div class="card"><h3>Dot product</h3><p style="font-size:15px">Angle <b>and</b> length. A longer arrow can win even if it points a bit away.</p></div>
     <div class="card"><h3>Euclidean (L2)</h3><p style="font-size:15px">The straight-line <b>gap</b> between the arrow tips. Length matters here too.</p></div>
   </div>
-  <div class="quiz card soft" data-quiz data-why="When every arrow has length 1, only the angle is left to compare, so all three metrics rank the same way. Check the length of your own embeddings with np.linalg.norm.">
+  <div class="quiz card soft" data-quiz data-why="When every arrow has length 1, only the angle is left to compare, so all three metrics rank the same way.">
     <h3>Quick check: all your arrows have length 1. You switch from cosine to L2. What happens to the ranking?</h3>
     <div class="opts"><button data-ok="0">It changes a lot</button><button data-ok="1">It stays the same; only the distance numbers change</button><button data-ok="0">Nothing at all changes, not even the numbers</button></div>
     <div class="feedback" role="status"></div>
@@ -114,7 +114,6 @@
   <div class="ctl-row"><div><label>Question</label><div class="chips" id="pPresets"></div></div></div>
   <div class="ctl-row">
     <div style="flex:1;min-width:200px"><label id="pkL">top-k = 3</label><input type="range" id="pk" min="1" max="10" value="3" aria-label="top-k for precision and recall"></div>
-    <div><label>Who decides “relevant”?</label><div class="seg-ctl p" id="labeler"><button aria-pressed="true" data-v="key">Answer key</button><button aria-pressed="false" data-v="mine">Me (click dots)</button></div></div>
   </div>
   <div class="card poolmap" id="poolmap"></div>
   <div class="grid2 pr-grid"><div class="card" id="prchart"></div><div class="card soft" id="poolSel"></div></div>
@@ -123,7 +122,7 @@
 <section class="slide mB" id="qidx" data-part="B" data-label="Question index"><div class="inner reveal">
   <div class="kicker"><span class="dot">B</span>A different kind of index</div>
   <h2>Search questions, return their chunk</h2>
-  <p class="lead">Instead of searching passages, search a list of <b>questions people already asked</b>. Each stored question carries one attached chunk. Your query finds similar questions; you get back their chunks. Watch for arrows that land on the same chunk.</p>
+  <p class="lead">Instead of searching passages, search a list of <b>questions people already asked</b>. Each stored question carries one attached chunk. Your query finds similar questions; you get back their chunks. </p>
   <div class="ctl-row"><div><label>Your question</label><div class="chips" id="qPresets"></div></div></div>
   <div class="qflow"><svg class="qlines" id="qlines" aria-hidden="true"></svg><div id="qlist"></div><div class="arrow">→</div><div id="qchunks"></div></div>
   <div class="tip warn"><svg class="ic"><use href="#i-bulb"/></svg><span id="qtip"></span></div>
@@ -131,57 +130,24 @@
 
 <section class="slide mC" id="judge" data-part="C" data-label="LLM as judge"><div class="inner reveal">
   <div class="kicker"><span class="dot">C</span>Using an LLM to grade retrieval</div>
-  <h2>Anatomy of a good judge</h2>
-  <div class="grid4 anat">
-    <div class="card"><span class="badge b">1</span><h3>A construct</h3><p>The one quality you rate. “Does this passage help answer the question?”</p></div>
-    <div class="card"><span class="badge o">2</span><h3>Anchors</h3><p>What a 1, 2, 3, 4 and 5 look like, in words. You use the same anchors when you label.</p></div>
-    <div class="card"><span class="badge g">3</span><h3>One passage per call</h3><p>Short prompt, one score back. Fewer chances to mix things up.</p></div>
-    <div class="card"><span class="badge p">4</span><h3>Strict output</h3><p>Ask for exact JSON. Anything else is a <b>failed</b> judgment: count it as missing, never as a 1.</p></div>
+  <h2>Can a model grade the results?</h2>
+  <p class="lead">Checking every search result by hand is slow. An <b>LLM judge</b> reads a question and one result, then gives a score. You decide <i>what</i> it scores.</p>
+  <div class="grid3">
+    <div class="card"><span class="badge b">1</span><h3>Input</h3><p>A question and a passage that search returned.</p></div>
+    <div class="card"><span class="badge o">2</span><h3>Construct</h3><p>The one quality being rated, for example “does this passage help answer the question?”</p></div>
+    <div class="card"><span class="badge g">3</span><h3>Output</h3><p>A score, such as 1 to 5, that you can count and compare.</p></div>
   </div>
-  <div class="typer-head"><h3>Two replies to the same prompt</h3><button type="button" id="typerPlay">Replay</button></div>
-  <div class="grid2" id="typer"></div>
   <div class="quiz card soft" data-quiz data-why="Every passage in a handbook is ‘true’, so a truth-based score can't separate a useful result from an off-topic one. Rate something that a bad result would fail.">
     <h3>Someone's judge rates “is this passage factually true?”. Why is that weak for grading search results?</h3>
     <div class="opts"><button data-ok="0">LLMs can't check facts</button><button data-ok="1">An off-topic passage can be perfectly true, so it still scores high</button><button data-ok="0">1–5 scales only work for opinions</button></div>
     <div class="feedback" role="status"></div>
   </div>
-  <div class="tip good"><svg class="ic"><use href="#i-bulb"/></svg><span><b>Trust, but check.</b> Label a sample yourself <i>before</i> you look at the judge's scores. Then compare: how often do you agree exactly? Within one point? What's Cohen's kappa? That comparison is your evidence that the judge is usable.</span></div>
-</div></section>
-
-<section class="slide mC" id="cost" data-part="C" data-label="Cost"><div class="inner reveal">
-  <div class="kicker"><span class="dot">C</span>What would judging cost?</div>
-  <h2>Tokens × price = cost</h2>
-  <p class="lead">Running a model in your own Colab costs $0 per token. To compare with a hosted API, count tokens and multiply by a published price. <b>These are example numbers.</b> Put in your own token counts and a price page you can cite.</p>
-  <div class="grid2">
-    <div class="card">
-      <div class="grid2" style="gap:12px">
-        <div><label class="kicker" for="cin">Input tokens / call</label><input id="cin" type="number" min="0" value="400"></div>
-        <div><label class="kicker" for="cout">Output tokens / call</label><input id="cout" type="number" min="0" value="80"></div>
-        <div><label class="kicker" for="pin">$ per 1M input</label><input id="pin" type="number" min="0" step="0.01" value="0.10"></div>
-        <div><label class="kicker" for="pout">$ per 1M output</label><input id="pout" type="number" min="0" step="0.01" value="0.30"></div>
-        <div><label class="kicker" for="calls">Judge calls per search</label><input id="calls" type="number" min="1" value="5"></div>
-      </div>
-    </div>
-    <div class="card soft cost-out">
-      <span class="kicker" style="justify-content:center">Cost of one search</span>
-      <span id="costOut">$0</span>
-      <span id="costPer" style="color:var(--muted)"></span>
-    </div>
-  </div>
-  <div class="tip warn"><svg class="ic"><use href="#i-bulb"/></svg><span>Where do the numbers come from? Your judge reports <b>input and output tokens</b> for each call. “Calls per search” is how many passages you judged for that search. Prices for the same model differ between sites, so write down <b>which page and which date</b>.</span></div>
-</div></section>
-
-<section class="slide mD" id="plan" data-part="D" data-label="Your plan"><div class="inner reveal">
-  <div class="kicker"><span class="dot">D</span>Doing HW02 on your own</div>
-  <h2>Your game plan</h2>
-  <p class="lead">Work through one part at a time. Tick things off (saved in this browser). The “ask yourself” questions are what your report should answer, in your own words.</p>
-  <div class="grid2" id="planGrid"></div>
 </div></section>
 
 <section class="slide mD" id="faq" data-part="D" data-label="Ask the TA"><div class="inner reveal">
-  <div class="kicker"><span class="dot">D</span>Office hours · ask in your own words</div>
+  <div class="kicker"><span class="dot">D</span>Course FAQ and concepts</div>
   <h2>Ask the TA</h2>
-  <div class="askbar"><input id="fq" type="text" placeholder="e.g. how do I start? / my judge keeps failing" aria-label="Question for the FAQ" autocomplete="off"></div>
+  <div class="askbar"><input id="fq" type="text" placeholder="e.g. can I use VS Code? / what is overlap?" aria-label="Question for the FAQ" autocomplete="off"></div>
   <div class="status" id="fstatus"><span class="pip"></span><span>This search is a tiny retriever too: your question and every answer are embedded with the same MiniLM model.</span></div>
   <div class="chips" id="fcats" style="margin-top:12px"></div>
   <div class="faqlist" id="faqlist" style="margin-top:12px"></div>

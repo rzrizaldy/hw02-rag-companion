@@ -10,9 +10,9 @@ The site teaches the ideas behind the homework without giving away its results. 
 - **Meaning as direction:** drag two document arrows and see when cosine, dot product and L2 disagree.
 - **Chunking lab:** re-cut the guide and watch whether an answer stays whole.
 - **Search:** ask anything. Your question is embedded in the browser with `all-MiniLM-L6-v2` (the notebook's model) and drawn as a dartboard with a top-k circle. "Mine" searches the chunks you made in the lab.
-- **Precision and recall:** a pooled relevance map and P/R curves as k grows; you can be the judge.
-- **Question index, LLM judge anatomy, cost formula.**
-- **Your game plan** for working through HW02 on your own, and **Ask the TA**, an FAQ you can search in your own words.
+- **Precision and recall:** every chunk ranked, with P/R curves as k grows.
+- **Question index** and **LLM judge**, explained as concepts.
+- **Ask the TA:** the course FAQ plus short concept answers, searchable in your own words.
 
 Data is built by `ta_run/export_companion_data.py` from `ta_run/companion_toy_guide.txt` and `ta_run/companion_faq.md`.
 
